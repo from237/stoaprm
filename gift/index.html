@@ -1,0 +1,612 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>기념품 신청</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<style>
+:root{
+  --ink:#131a17; --forest:#13413a; --forest-hover:#0d302b; --forest-tint:#e7efec;
+  --paper:#edeae4; --surface:#fff; --line:#dcd8d0; --muted:#6e736e;
+  --gold:#a8823c; --danger:#a3291c; --danger-tint:#fbecea; --r:10px;
+  --shadow:0 1px 2px rgba(19,26,23,.06),0 8px 24px rgba(19,26,23,.07);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",system-ui,sans-serif;
+  font-size:16px;line-height:1.6;word-break:keep-all}
+body.locked{overflow:hidden}
+
+.band{background:var(--forest);color:#f3f6f4;padding:40px 20px 72px}
+.band-inner{max-width:600px;margin:0 auto}
+.band .kicker{margin:0 0 14px;font-size:13px;font-weight:600;color:#9dbdb2}
+.band h1{margin:0;font-size:30px;line-height:1.32;font-weight:800;letter-spacing:-.032em}
+.band p{margin:14px 0 0;max-width:34em;font-size:15px;color:#bcd2c9}
+
+.wrap{max-width:600px;margin:-48px auto 64px;padding:0 16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+  box-shadow:var(--shadow);padding:24px 20px;margin-bottom:14px}
+.card[data-locked="true"]{opacity:.42;pointer-events:none}
+.card-head{display:flex;align-items:baseline;gap:10px;margin-bottom:18px}
+.step-no{flex:none;width:24px;height:24px;border-radius:50%;background:var(--forest-tint);
+  color:var(--forest);font-size:13px;font-weight:700;line-height:24px;text-align:center;align-self:center}
+.card-head h2{margin:0;font-size:18px;font-weight:700;letter-spacing:-.02em}
+.card-head .hint{margin-left:auto;font-size:13px;color:var(--muted)}
+
+.field{margin-bottom:16px}
+.field:last-child{margin-bottom:0}
+label.lab{display:block;margin-bottom:7px;font-size:14px;font-weight:600}
+label.lab .req{color:var(--danger)}
+.help{margin:7px 0 0;font-size:13px;color:var(--muted)}
+input[type=text],input[type=tel],select,textarea{width:100%;min-height:50px;padding:12px 13px;
+  border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);
+  font-family:inherit;font-size:16px;line-height:1.5}
+textarea{min-height:84px;resize:vertical}
+select{appearance:none;padding-right:38px;background-repeat:no-repeat;background-position:right 14px center;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8'><path d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%236e736e' stroke-width='1.6'/></svg>")}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{
+  outline:2px solid var(--forest);outline-offset:2px}
+input:disabled,select:disabled{background:#f4f3f0;color:var(--muted)}
+.row{display:flex;gap:8px}
+.row>input{flex:1}
+
+button{font-family:inherit;font-size:16px;cursor:pointer}
+.btn{min-height:52px;padding:14px 20px;border:1px solid var(--forest);border-radius:8px;
+  background:var(--forest);color:#fff;font-weight:700;letter-spacing:-.01em}
+.btn:hover{background:var(--forest-hover)}
+.btn:disabled{background:#b6bdb9;border-color:#b6bdb9;cursor:not-allowed}
+.btn-ghost{min-height:50px;padding:12px 16px;border:1px solid var(--line);border-radius:8px;
+  background:var(--surface);color:var(--ink);font-weight:600;white-space:nowrap}
+.btn-ghost:hover{border-color:var(--muted)}
+.btn-block{display:block;width:100%}
+.btn-text{border:0;background:none;padding:4px 0;color:var(--forest);font-weight:600;
+  text-decoration:underline;text-underline-offset:3px}
+
+.who{margin-top:16px;border:1px solid var(--forest-tint);border-left:3px solid var(--gold);
+  border-radius:8px;background:#fafaf8;padding:14px 16px}
+.who dl{display:grid;grid-template-columns:72px 1fr;gap:6px 12px;margin:0}
+.who dt{color:var(--muted);font-size:14px}
+.who dd{margin:0;font-size:15px;font-weight:600}
+
+/* ---------------------------------------------------------- 기념품 카드 */
+.gifts{display:grid;gap:12px;align-items:stretch}
+.gift{position:relative;display:flex;flex-direction:column;border:1.5px solid var(--line);
+  border-radius:var(--r);background:var(--surface);overflow:hidden}
+.gift.is-on{border-color:var(--forest);border-width:2px;box-shadow:0 0 0 4px var(--forest-tint)}
+.gift-pick{display:flex;flex-direction:column;flex:1;width:100%;border:0;background:none;padding:0;text-align:left}
+.gift-img{display:block;width:100%;aspect-ratio:16/10;object-fit:cover;object-position:center top;
+  background:#f4f3f0;border-bottom:1px solid var(--line)}
+.gift-img-empty{display:grid;place-items:center;color:var(--muted);font-size:13px}
+.gift-body{display:block;padding:14px 16px 14px}
+.gift-name{display:block;font-size:17px;font-weight:700;letter-spacing:-.02em;line-height:1.35}
+.gift-desc{display:block;margin:6px 0 0;font-size:14px;line-height:1.55;color:#454b47;white-space:pre-line}
+.gift-note{display:block;margin:8px 0 0;font-size:13px;color:var(--gold);font-weight:600}
+.gift-mark{position:absolute;top:12px;right:12px;width:28px;height:28px;border-radius:50%;
+  background:var(--forest);color:#fff;display:none;place-items:center;font-size:15px;font-weight:700}
+.gift.is-on .gift-mark{display:grid}
+.gift-more{width:100%;border:0;border-top:1px solid var(--line);background:#fafaf8;
+  padding:12px;font-size:14px;font-weight:600;color:var(--forest)}
+.gift-more:hover{background:var(--forest-tint)}
+.empty-state{border:1px dashed var(--line);border-radius:var(--r);padding:28px 20px;
+  text-align:center;color:var(--muted);font-size:15px}
+
+/* ---------------------------------------------------------- 상세 보기 */
+.sheet{position:fixed;inset:0;z-index:50;display:none;background:rgba(19,26,23,.55)}
+.sheet[open]{display:block}
+.sheet-inner{position:absolute;inset:0;max-width:720px;margin:0 auto;background:var(--surface);
+  display:flex;flex-direction:column}
+.sheet-top{flex:none;display:flex;align-items:center;gap:12px;padding:14px 16px;
+  border-bottom:1px solid var(--line);background:var(--surface)}
+.sheet-top h3{margin:0;font-size:16px;font-weight:700;letter-spacing:-.02em;line-height:1.35}
+.sheet-close{margin-left:auto;flex:none;width:40px;height:40px;border:1px solid var(--line);
+  border-radius:8px;background:var(--surface);font-size:18px;line-height:1}
+.sheet-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff}
+.sheet-body img{display:block;width:100%;height:auto}
+.sheet-sec{padding:18px 16px 6px;font-size:15px;font-weight:700;color:var(--forest);
+  border-top:8px solid var(--paper)}
+.sheet-sec:first-child{border-top:0}
+.img-fail{margin:12px 16px;padding:20px;border:1px dashed var(--line);border-radius:8px;
+  color:var(--muted);font-size:14px;text-align:center}
+.sheet-foot{flex:none;padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+  border-top:1px solid var(--line);background:var(--surface)}
+
+.notice{border-radius:8px;padding:13px 15px;font-size:14px;line-height:1.55;margin-bottom:16px}
+.notice-info{background:var(--forest-tint);color:#123b34}
+.notice-error{background:var(--danger-tint);color:var(--danger)}
+.field-error{margin-top:6px;font-size:13px;color:var(--danger);font-weight:600}
+input[aria-invalid=true],select[aria-invalid=true]{border-color:var(--danger)}
+
+.done{text-align:center;padding:40px 24px}
+.done-seal{width:60px;height:60px;margin:0 auto 20px;border-radius:50%;background:var(--forest);
+  color:#fff;display:grid;place-items:center;font-size:28px}
+.done h2{margin:0 0 10px;font-size:23px;font-weight:800;letter-spacing:-.03em}
+.done p{margin:0 auto;max-width:30em;color:var(--muted);font-size:15px}
+.summary{margin:24px 0 0;border-top:1px solid var(--line);padding-top:18px;text-align:left}
+.summary dl{display:grid;grid-template-columns:84px 1fr;gap:9px 12px;margin:0}
+.summary dt{color:var(--muted);font-size:14px}
+.summary dd{margin:0;font-size:15px}
+
+.foot{max-width:600px;margin:0 auto;padding:0 16px 40px;font-size:13px;color:var(--muted)}
+
+@media (min-width:560px){
+  .gifts{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+  .gift-body{padding:12px 13px}
+  .gift-name{font-size:15px}
+  .gift-desc{font-size:13px}
+}
+@media (min-width:760px){
+  .sheet-inner{inset:24px auto;top:24px;bottom:24px;left:50%;transform:translateX(-50%);
+    width:720px;border-radius:12px;overflow:hidden}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<header class="band">
+  <div class="band-inner">
+    <p class="kicker" id="kicker"></p>
+    <h1>함께해 주셔서 감사합니다.<br>기념품을 골라 주세요.</h1>
+    <p>참가하신 날짜와 회사를 선택하시면 기념품을 고르실 수 있습니다. 입력하신 주소로 순차 발송해 드립니다.</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="banner"></div>
+
+  <section class="card" id="card1">
+    <div class="card-head"><span class="step-no">1</span><h2>참가 확인</h2></div>
+    <div class="field">
+      <label class="lab" for="date">참가일자 <span class="req">*</span></label>
+      <select id="date"><option value="">명단을 불러오는 중…</option></select>
+    </div>
+    <div class="field">
+      <label class="lab" for="company">협력사명 <span class="req">*</span></label>
+      <select id="company" disabled><option value="">참가일자를 먼저 선택해 주세요</option></select>
+      <p class="help">명단에 회사가 보이지 않으면 행사 담당자에게 문의해 주세요.</p>
+    </div>
+    <div class="who" id="who" hidden>
+      <dl><dt>참가자</dt><dd id="whoName">-</dd><dt>직위</dt><dd id="whoPos">-</dd></dl>
+    </div>
+  </section>
+
+  <section class="card" id="card2" data-locked="true">
+    <div class="card-head"><span class="step-no">2</span><h2>기념품 선택</h2><span class="hint">1개 선택</span></div>
+    <div class="gifts" id="gifts"></div>
+    <div class="field" id="optionField" hidden style="margin-top:16px">
+      <label class="lab" for="option">색상 선택 <span class="req">*</span></label>
+      <select id="option"></select>
+    </div>
+  </section>
+
+  <section class="card" id="card3" data-locked="true">
+    <div class="card-head"><span class="step-no">3</span><h2>받으실 곳</h2></div>
+    <div class="field">
+      <label class="lab" for="recipient">수령인 <span class="req">*</span></label>
+      <input type="text" id="recipient" autocomplete="name" placeholder="예: 홍길동">
+    </div>
+    <div class="field">
+      <label class="lab" for="phone">연락처 <span class="req">*</span></label>
+      <input type="tel" id="phone" inputmode="numeric" autocomplete="tel" placeholder="010-1234-5678" maxlength="13">
+      <p class="help">배송 안내 문자를 받으실 번호입니다.</p>
+    </div>
+    <div class="field">
+      <label class="lab" for="postcode">주소 <span class="req">*</span></label>
+      <div class="row">
+        <input type="text" id="postcode" placeholder="우편번호" readonly style="max-width:140px">
+        <button type="button" class="btn-ghost" id="findAddr">주소 찾기</button>
+      </div>
+    </div>
+    <div class="field"><input type="text" id="address1" autocomplete="street-address" placeholder="기본 주소"></div>
+    <div class="field"><input type="text" id="address2" autocomplete="address-line2" placeholder="상세 주소 (동/호수 등)"></div>
+    <div class="field">
+      <label class="lab" for="memo">요청사항</label>
+      <textarea id="memo" placeholder="부재 시 경비실에 맡겨 주세요 등"></textarea>
+    </div>
+    <p id="formError" class="field-error" hidden></p>
+    <button type="button" class="btn btn-block" id="submitBtn" style="margin-top:8px">신청하기</button>
+  </section>
+</main>
+
+<p class="foot">신청 후에도 같은 회사로 다시 접속하시면 내용을 수정하실 수 있습니다.</p>
+
+<!-- 상세 보기 -->
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+  <div class="sheet-inner">
+    <div class="sheet-top">
+      <h3 id="sheetTitle"></h3>
+      <button type="button" class="sheet-close" id="sheetClose" aria-label="닫기">✕</button>
+    </div>
+    <div class="sheet-body" id="sheetBody"></div>
+    <div class="sheet-foot">
+      <button type="button" class="btn btn-block" id="sheetPick">이 기념품으로 선택하기</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js" onerror="window.__noPostcode=true"></script>
+<script>
+/* ================================================================
+   여기만 고치면 됩니다
+   ================================================================ */
+
+// 1) Apps Script 웹앱 배포 URL (README 참고)
+const API = "https://script.google.com/macros/s/여기에_배포URL_붙여넣기/exec";
+
+// 2) 행사 이름 — 화면 맨 위에 표시됩니다
+const EVENT_TITLE = "협력사 초청 행사";
+
+// 3) 기념품
+//    show    : false 로 두면 화면에서 숨겨집니다
+//    thumb   : 카드에 쓸 대표 이미지. 비우면 detail 의 첫 이미지 윗부분을 씁니다
+//    options : 색상 등 고를 것이 있을 때만. 없으면 빈 배열
+//    detail  : "자세히 보기"에 세로로 이어 붙일 상세페이지 이미지들
+const GIFTS = [
+  {
+    id: "A",
+    show: true,
+    name: "LG 디오스 오브제컬렉션 와인셀러 8병",
+    desc: "크림 라벤더 · 싱글존 (W0082GLE)\n1℃ 단위로 온도를 맞춰 보관합니다.",
+    note: "전문기사 설치 배송",
+    thumb: "//imagecdn.skstoa.com/htmleditor/207/%EC%9B%B9%EA%B8%B0%EC%88%A0%EC%84%9C_LG%20%EB%94%94%EC%98%A4%EC%8A%A4%20%EC%98%A4%EB%B8%8C%EC%A0%9C%20%EC%BB%AC%EB%A0%89%EC%85%98%20%EC%99%80%EC%9D%B8%EC%85%80%EB%9F%AC%20%EB%9D%BC%EB%B2%A4%EB%8D%94_W0082GLE_202301111676526258524.jpg",
+    options: [],
+    detail: [
+      { title: "", images: [
+        "https://open.lge.co.kr/link/2025/care/usp_banner/07/1801_banner/images/01.gif",
+        "https://open.lge.co.kr/link/2023/ha/usp_banner/01/2601_guide_banner/ver2/images/01.jpg",
+        "//imagecdn.skstoa.com/htmleditor/207/%EC%9B%B9%EA%B8%B0%EC%88%A0%EC%84%9C_LG%20%EB%94%94%EC%98%A4%EC%8A%A4%20%EC%98%A4%EB%B8%8C%EC%A0%9C%20%EC%BB%AC%EB%A0%89%EC%85%98%20%EC%99%80%EC%9D%B8%EC%85%80%EB%9F%AC%20%EB%9D%BC%EB%B2%A4%EB%8D%94_W0082GLE_202301111676526258524.jpg"
+      ]}
+    ]
+  },
+  {
+    id: "B",
+    show: true,
+    name: "선일금고 아트 금고 UP-040",
+    desc: "김지희 작가 에디션\n전자식 잠금 가정용 금고",
+    note: "",
+    thumb: "//image.skstoa.com/htmleditor/969/SK_%EC%84%A0%EC%9D%BC%EA%B8%88%EA%B3%A0_UP_%EA%B9%80%EC%A7%80%ED%9D%AC%EC%9E%91%EA%B0%80_UP-040_%EC%83%81%EC%84%B8%ED%8E%98%EC%9D%B4%EC%A7%801786670057300.jpg",
+    options: [],
+    detail: [
+      { title: "", images: [
+        "//image.skstoa.com/htmleditor/969/SK_%EC%84%A0%EC%9D%BC%EA%B8%88%EA%B3%A0_UP_%EA%B9%80%EC%A7%80%ED%9D%AC%EC%9E%91%EA%B0%80_UP-040_%EC%83%81%EC%84%B8%ED%8E%98%EC%9D%B4%EC%A7%801786670057300.jpg"
+      ]}
+    ]
+  },
+  {
+    id: "C",
+    show: true,
+    name: "코지마 마사지기 2종 세트",
+    desc: "저주파 마사지기 코지랩 (CMA-E106WL)\n발마사지기 코지스툴 부클레 에디션 (CMF-140/150)",
+    note: "2종 구성",
+    thumb: "//image.skstoa.com/htmleditor/914/CMA-E106WL_02%28%ED%99%88%EC%87%BC%ED%95%91%EC%9A%A9%291784104009420.jpg",
+    options: ["워시드 그레이 (CMF-140)", "워시드 아이보리 (CMF-150)"],
+    detail: [
+      { title: "① 저주파 마사지기 코지랩 CMA-E106WL", images: [
+        "//image.skstoa.com/htmleditor/735/CMA-E106WL_011783925066433.gif",
+        "//image.skstoa.com/htmleditor/914/CMA-E106WL_02%28%ED%99%88%EC%87%BC%ED%95%91%EC%9A%A9%291784104009420.jpg",
+        "//image.skstoa.com/htmleditor/571/CMA-E106WL_031784104020944.gif",
+        "//image.skstoa.com/htmleditor/057/CMA-E106WL_05%28%EC%88%98%EC%A0%95%291784104073326.jpg",
+        "//image.skstoa.com/htmleditor/903/CMA-E106WL_071784104107206.gif",
+        "//image.skstoa.com/htmleditor/130/CMA-E106WL_091784104131684.jpg",
+        "//image.skstoa.com/htmleditor/873/CMA-E106WL_111784104149578.gif",
+        "//image.skstoa.com/htmleditor/709/CMA-E106WL_16%28%EC%88%98%EC%A0%95%291784104181485.jpg"
+      ]},
+      { title: "② 발마사지기 코지스툴 부클레 에디션 CMF-140/150", images: [
+        "https://www.bokjung.com/contents/CMF-140,150/CMF-140,150_1050px_01.jpg",
+        "https://www.bokjung.com/contents/CMF-140,150/CMF-140,150_1050px_02.gif",
+        "https://www.bokjung.com/contents/CMF-140,150/CMF-140,150_1050px_03.jpg",
+        "https://www.bokjung.com/contents/CMF-140,150/CMF-140,150_1050px_04.jpg",
+        "https://www.bokjung.com/contents/CMF-140,150/CMF-140,150_1050px_05.gif",
+        "https://www.bokjung.com/contents/CMF-140,150/CMF-140,150_1050px_06.jpg",
+        "https://www.bokjung.com/contents/--notioce/massager_content_notice_1050px.jpg"
+      ]}
+    ]
+  }
+];
+
+/* ================================================================
+   아래는 건드리지 않아도 됩니다
+   ================================================================ */
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+const STATE = {
+  companies: [],
+  gifts: GIFTS.filter(g => g.show),
+  pick: null,
+  option: "",
+  current: null,
+  sheetGift: null,
+  lastFocus: null
+};
+
+const giftById = (id) => STATE.gifts.find(g => g.id === id) || null;
+const thumbOf = (g) => g.thumb || (g.detail && g.detail[0] && g.detail[0].images[0]) || "";
+
+// ---------------------------------------------------------------- 시작
+async function boot() {
+  $("kicker").textContent = EVENT_TITLE;
+  renderGifts();
+
+  let d;
+  try {
+    const r = await fetch(API + "?action=init", { cache: "no-store" });
+    d = await r.json();
+    if (!d.ok) throw new Error(d.error);
+  } catch {
+    $("date").innerHTML = "";
+    $("date").add(new Option("불러오지 못했습니다", ""));
+    return banner("error", "참가자 명단을 불러오지 못했습니다. 잠시 후 새로고침해 주세요.");
+  }
+
+  STATE.companies = d.companies;
+  const sel = $("date");
+  sel.innerHTML = "";
+  sel.add(new Option("선택해 주세요", ""));
+  d.dates.forEach(v => sel.add(new Option(v, v)));
+}
+
+// ---------------------------------------------------------------- 1단계
+$("date").addEventListener("change", () => {
+  const date = $("date").value, c = $("company");
+  c.innerHTML = ""; STATE.current = null;
+  resetChoice();
+  $("who").hidden = true; $("banner").innerHTML = "";
+  lock(2, true); lock(3, true);
+
+  if (!date) { c.disabled = true; c.add(new Option("참가일자를 먼저 선택해 주세요", "")); return; }
+  c.disabled = false;
+  c.add(new Option("선택해 주세요", ""));
+  STATE.companies.filter(x => x.date === date).forEach(x =>
+    c.add(new Option(x.company + (x.submitted ? " (신청 완료)" : ""), x.company)));
+});
+
+$("company").addEventListener("change", async () => {
+  const company = $("company").value;
+  $("banner").innerHTML = "";
+  resetChoice();
+  ["recipient", "phone", "postcode", "address1", "address2", "memo"].forEach(k => ($(k).value = ""));
+  $("submitBtn").textContent = "신청하기";
+  lock(3, true);
+
+  if (!company) { $("who").hidden = true; STATE.current = null; lock(2, true); return; }
+
+  // 직위·참가자명과 기존 신청 내용을 한 번에 받아온다
+  let d;
+  try {
+    const r = await fetch(API + "?action=pick&company=" + encodeURIComponent(company), { cache: "no-store" });
+    d = await r.json();
+    if (!d.ok) throw new Error(d.error);
+  } catch (err) {
+    $("who").hidden = true; lock(2, true);
+    return banner("error", err.message || "참가자 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.");
+  }
+
+  STATE.current = { company, date: $("date").value, position: d.position, name: d.name };
+  $("whoName").textContent = d.name;
+  $("whoPos").textContent = d.position;
+  $("who").hidden = false;
+  lock(2, false);
+
+  if (d.found) {
+    banner("info", "이미 신청하신 내역이 있습니다. 아래에서 내용을 바꾸고 다시 신청하시면 최신 내용으로 반영됩니다.");
+    setPick(d.data.gift_id, { silent: true });
+    if (d.data.option) { STATE.option = d.data.option; $("option").value = d.data.option; }
+    $("recipient").value = d.data.recipient || "";
+    $("phone").value = d.data.phone || "";
+    $("postcode").value = d.data.postcode || "";
+    $("address1").value = d.data.address1 || "";
+    $("address2").value = d.data.address2 || "";
+    $("memo").value = d.data.memo || "";
+    $("submitBtn").textContent = "수정 내용 저장하기";
+    lock(3, false);
+  }
+});
+
+const lock = (n, on) => ($("card" + n).dataset.locked = on ? "true" : "false");
+const banner = (kind, msg) => ($("banner").innerHTML = `<div class="notice notice-${kind}">${msg}</div>`);
+
+function resetChoice() {
+  STATE.pick = null;
+  STATE.option = "";
+  $("optionField").hidden = true;
+  renderGifts();
+}
+
+// ---------------------------------------------------------------- 2단계
+function renderGifts() {
+  const box = $("gifts");
+  if (!STATE.gifts.length) {
+    box.innerHTML = `<div class="empty-state">기념품 정보를 준비 중입니다.<br>준비되는 대로 이 화면에서 고르실 수 있습니다.</div>`;
+    return;
+  }
+
+  box.innerHTML = STATE.gifts.map(g => {
+    const t = thumbOf(g);
+    return `
+    <div class="gift${STATE.pick === g.id ? " is-on" : ""}" data-id="${g.id}">
+      <button type="button" class="gift-pick" data-act="pick" aria-pressed="${STATE.pick === g.id}">
+        ${t ? `<img class="gift-img" src="${esc(t)}" alt="${esc(g.name)}" loading="lazy">`
+            : `<span class="gift-img gift-img-empty">이미지 준비 중</span>`}
+        <span class="gift-body">
+          <span class="gift-name">${esc(g.name)}</span>
+          ${g.desc ? `<span class="gift-desc">${esc(g.desc)}</span>` : ""}
+          ${g.note ? `<span class="gift-note">${esc(g.note)}</span>` : ""}
+        </span>
+      </button>
+      ${g.detail && g.detail.length
+        ? `<button type="button" class="gift-more" data-act="more">자세히 보기</button>` : ""}
+      <span class="gift-mark" aria-hidden="true">✓</span>
+    </div>`;
+  }).join("");
+
+  box.querySelectorAll("[data-act]").forEach(b => {
+    const id = b.closest(".gift").dataset.id;
+    b.addEventListener("click", () => b.dataset.act === "pick" ? setPick(id) : openSheet(id));
+  });
+}
+
+function setPick(id, opts) {
+  const g = giftById(id);
+  if (!g) return;
+  STATE.pick = id;
+
+  // 고를 옵션이 있으면 색상 선택을 띄운다
+  const of = $("optionField"), sel = $("option");
+  if (g.options && g.options.length) {
+    sel.innerHTML = "";
+    sel.add(new Option("선택해 주세요", ""));
+    g.options.forEach(o => sel.add(new Option(o, o)));
+    sel.value = STATE.option && g.options.includes(STATE.option) ? STATE.option : "";
+    STATE.option = sel.value;
+    of.hidden = false;
+  } else {
+    of.hidden = true;
+    STATE.option = "";
+  }
+
+  renderGifts();
+  if (!opts || !opts.silent) {
+    lock(3, false);
+    ($("optionField").hidden ? $("card3") : $("optionField")).scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+}
+
+$("option").addEventListener("change", () => {
+  STATE.option = $("option").value;
+  $("option").removeAttribute("aria-invalid");
+});
+
+// ---------------------------------------------------------------- 상세 보기
+function openSheet(id) {
+  const g = giftById(id);
+  if (!g) return;
+  STATE.sheetGift = id;
+  STATE.lastFocus = document.activeElement;
+
+  $("sheetTitle").textContent = g.name;
+  $("sheetBody").innerHTML = g.detail.map(sec => `
+    ${sec.title ? `<div class="sheet-sec">${esc(sec.title)}</div>` : ""}
+    ${sec.images.map(src =>
+      `<img src="${esc(src)}" alt="" loading="lazy"
+            onerror="this.outerHTML='<div class=\\'img-fail\\'>이미지를 불러오지 못했습니다.</div>'">`).join("")}
+  `).join("");
+  $("sheetBody").scrollTop = 0;
+
+  $("sheet").setAttribute("open", "");
+  document.body.classList.add("locked");
+  $("sheetClose").focus();
+}
+
+function closeSheet() {
+  $("sheet").removeAttribute("open");
+  document.body.classList.remove("locked");
+  if (STATE.lastFocus) STATE.lastFocus.focus();
+  STATE.sheetGift = null;
+}
+
+$("sheetClose").addEventListener("click", closeSheet);
+$("sheet").addEventListener("click", e => { if (e.target === $("sheet")) closeSheet(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && $("sheet").hasAttribute("open")) closeSheet(); });
+$("sheetPick").addEventListener("click", () => {
+  const id = STATE.sheetGift;
+  closeSheet();
+  setPick(id);
+});
+
+// ---------------------------------------------------------------- 3단계
+$("phone").addEventListener("input", e => {
+  const d = e.target.value.replace(/\D/g, "").slice(0, 11);
+  e.target.value = d.length > 7 ? `${d.slice(0,3)}-${d.slice(3,7)}-${d.slice(7)}`
+                 : d.length > 3 ? `${d.slice(0,3)}-${d.slice(3)}` : d;
+});
+
+$("findAddr").addEventListener("click", () => {
+  if (window.__noPostcode || typeof daum === "undefined") {
+    $("postcode").readOnly = false;
+    $("postcode").placeholder = "우편번호 직접 입력";
+    $("address1").focus();
+    return;
+  }
+  new daum.Postcode({ oncomplete: d => {
+    $("postcode").value = d.zonecode;
+    $("address1").value = d.roadAddress || d.jibunAddress;
+    $("address2").focus();
+  }}).open();
+});
+
+$("submitBtn").addEventListener("click", async () => {
+  $("formError").hidden = true;
+  ["recipient", "phone", "address1", "option"].forEach(k => $(k).removeAttribute("aria-invalid"));
+
+  const g = giftById(STATE.pick);
+  if (!STATE.current) return fail("참가일자와 협력사를 먼저 선택해 주세요.");
+  if (!g) return fail("기념품을 하나 골라 주세요.");
+  if (g.options && g.options.length && !STATE.option) return fail("색상을 선택해 주세요.", "option");
+  if ($("recipient").value.trim().length < 2) return fail("수령인 이름을 입력해 주세요.", "recipient");
+  if (!/^01[016789]-\d{3,4}-\d{4}$/.test($("phone").value)) return fail("연락처를 휴대폰 번호 형식으로 입력해 주세요.", "phone");
+  if ($("address1").value.trim().length < 5) return fail("주소를 입력해 주세요.", "address1");
+
+  const btn = $("submitBtn");
+  btn.disabled = true; btn.textContent = "저장 중…";
+  try {
+    // Content-Type 을 text/plain 으로 보내야 Apps Script 에서 CORS 사전요청이 생기지 않습니다
+    const r = await fetch(API, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        company: STATE.current.company,
+        gift_id: STATE.pick,
+        gift_name: g.name,
+        option: STATE.option,
+        recipient: $("recipient").value.trim(),
+        phone: $("phone").value,
+        postcode: $("postcode").value.trim(),
+        address1: $("address1").value.trim(),
+        address2: $("address2").value.trim(),
+        memo: $("memo").value.trim(),
+      }),
+    });
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error || "저장에 실패했습니다.");
+    showDone(g);
+  } catch (e) {
+    btn.disabled = false; btn.textContent = "다시 신청하기";
+    fail(e.message || "저장에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+  }
+});
+
+function fail(msg, focusId) {
+  const err = $("formError");
+  err.textContent = msg; err.hidden = false;
+  if (focusId) { $(focusId).setAttribute("aria-invalid", "true"); $(focusId).focus(); }
+  else err.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+// ---------------------------------------------------------------- 완료
+function showDone(g) {
+  const addr = [$("address1").value.trim(), $("address2").value.trim()].filter(Boolean).join(" ");
+  document.querySelector(".wrap").innerHTML = `
+    <section class="card done">
+      <div class="done-seal" aria-hidden="true">✓</div>
+      <h2>신청이 접수되었습니다</h2>
+      <p>아래 주소로 기념품을 보내 드리겠습니다. 발송 전 문자로 한 번 더 안내드립니다.</p>
+      <div class="summary"><dl>
+        <dt>협력사</dt><dd>${esc(STATE.current.company)}</dd>
+        <dt>기념품</dt><dd>${esc(g.name)}${STATE.option ? "<br>" + esc(STATE.option) : ""}</dd>
+        <dt>수령인</dt><dd>${esc($("recipient").value.trim())} · ${esc($("phone").value)}</dd>
+        <dt>주소</dt><dd>${$("postcode").value ? "(" + esc($("postcode").value) + ") " : ""}${esc(addr)}</dd>
+      </dl></div>
+      <button type="button" class="btn-text" style="margin-top:22px" onclick="location.reload()">다른 회사로 신청하기</button>
+    </section>`;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+boot();
+</script>
+</body>
+</html>
